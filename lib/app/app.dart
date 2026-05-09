@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/settings/providers/settings_providers.dart';
 import 'router.dart';
 import 'theme/app_theme.dart';
 
@@ -10,13 +11,13 @@ class FinsightApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Watch theme mode from preferences provider
+    final themeMode = ref.watch(themeModeProvider);
     return MaterialApp.router(
       title: 'Finsight',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: themeMode,
       routerConfig: appRouter,
     );
   }

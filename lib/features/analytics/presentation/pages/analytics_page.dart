@@ -1,67 +1,67 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../widgets/category_pie_chart.dart';
+import '../widgets/monthly_bar_chart.dart';
 
-/// Analytics page.
-///
-/// Shows charts and data visualizations:
-/// - Monthly expense breakdown (pie/donut chart)
-/// - Income vs expense trend (bar chart)
-/// - Category-wise spending breakdown
-/// - Top tags analysis
 class AnalyticsPage extends StatelessWidget {
   const AnalyticsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Analytics',
-          style: AppTextStyles.headlineLarge(
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
-          ),
-        ),
+        title: Text('Analytics', style: AppTextStyles.headlineLarge()),
       ),
-      body: Center(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.bar_chart_rounded,
-              size: 64,
-              color: AppColors.primary.withValues(alpha: 0.5),
-            )
-                .animate()
-                .fadeIn(duration: 600.ms)
-                .scale(begin: const Offset(0.8, 0.8)),
-            const SizedBox(height: 16),
-            Text(
-              'Analytics',
-              style: AppTextStyles.headlineMedium(
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
-              ),
-            ).animate().fadeIn(delay: 200.ms, duration: 600.ms),
-            const SizedBox(height: 8),
-            Text(
-              'Add transactions to see spending insights',
-              style: AppTextStyles.bodyMedium(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
-              ),
-            ).animate().fadeIn(delay: 400.ms, duration: 600.ms),
+            Text('Income vs Expenses — Last 6 Months',
+                style: AppTextStyles.headlineSmall()),
+            const SizedBox(height: 4),
+            const Row(
+              children: [
+                _LegendDot(color: Color(0xFF00C853), label: 'Income'),
+                SizedBox(width: 12),
+                _LegendDot(color: Color(0xFFFF5252), label: 'Expense'),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const SizedBox(height: 220, child: MonthlyBarChart()),
+            const SizedBox(height: 24),
+            Text('This Month\'s Spending by Category',
+                style: AppTextStyles.headlineSmall()),
+            const SizedBox(height: 12),
+            const SizedBox(height: 200, child: CategoryPieChart()),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _LegendDot extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _LegendDot({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration:
+              BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
+        Text(label, style: AppTextStyles.bodySmall()),
+      ],
     );
   }
 }

@@ -6,6 +6,8 @@ import '../../features/transactions/presentation/pages/transactions_page.dart';
 import '../../features/accounts/presentation/pages/accounts_page.dart';
 import '../../features/analytics/presentation/pages/analytics_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/settings/presentation/pages/category_management_page.dart';
+import '../../features/settings/presentation/pages/tag_management_page.dart';
 
 /// Navigation shell key for preserving tab state.
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -65,6 +67,20 @@ final GoRouter appRouter = GoRouter(
               path: '/settings',
               name: 'settings',
               builder: (context, state) => const SettingsPage(),
+              routes: [
+                GoRoute(
+                  path: 'categories',
+                  name: 'settings_categories',
+                  builder: (context, state) =>
+                      const CategoryManagementPage(),
+                ),
+                GoRoute(
+                  path: 'tags',
+                  name: 'settings_tags',
+                  builder: (context, state) =>
+                      const TagManagementPage(),
+                ),
+              ],
             ),
           ],
         ),
