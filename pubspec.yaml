@@ -1,0 +1,68 @@
+name: finsight
+description: "Personal finance management app — track expenses, income, investments and transfers with ledger-based integrity"
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.10.8
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Database
+  drift: ^2.22.1
+  drift_flutter: ^0.2.4
+  path_provider: ^2.1.5
+  path: ^1.9.0
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Navigation
+  go_router: ^14.8.1
+
+  # Dependency Injection
+  get_it: ^8.0.3
+  injectable: ^2.5.0
+
+  # Data Models
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+
+  # Forms
+  flutter_form_builder: ^10.3.0
+  form_builder_validators: ^11.1.0
+
+  # Charts
+  fl_chart: ^0.70.2
+
+  # UI
+  flutter_animate: ^4.5.2
+  google_fonts: ^6.2.1
+  gap: ^3.0.1
+  flutter_svg: ^2.0.17
+
+  # Utilities
+  uuid: ^4.5.1
+  intl: any
+
+  # Icons
+  hugeicons: ^0.0.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+  # Code generation
+  build_runner: ^2.4.14
+  drift_dev: ^2.22.1
+  freezed: ^2.5.7
+  json_serializable: ^6.9.3
+  riverpod_generator: ^2.6.3
+  injectable_generator: ^2.7.0
+
+flutter:
+  uses-material-design: true
