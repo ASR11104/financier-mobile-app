@@ -20,6 +20,9 @@ Stream<List<TransactionEntity>> transactionsByType(Ref ref, String type) =>
     ref.watch(transactionRepositoryProvider).watchByType(type);
 
 @riverpod
-Future<List<TransactionEntity>> recentTransactions(Ref ref,
+Stream<List<TransactionEntity>> recentTransactions(Ref ref,
     {int limit = 10}) =>
-    ref.watch(transactionRepositoryProvider).getRecent(limit: limit);
+    ref
+        .watch(transactionRepositoryProvider)
+        .watchAll()
+        .map((list) => list.take(limit).toList());

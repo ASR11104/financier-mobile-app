@@ -191,7 +191,7 @@ class _TransactionsByTypeProviderElement
 }
 
 String _$recentTransactionsHash() =>
-    r'1d81108b66391ba846bd52fd320dc9f21cfac9a6';
+    r'c8acc615b897496a6d166d908c2fa82428cfce1f';
 
 /// See also [recentTransactions].
 @ProviderFor(recentTransactions)
@@ -232,7 +232,7 @@ class RecentTransactionsFamily
 
 /// See also [recentTransactions].
 class RecentTransactionsProvider
-    extends AutoDisposeFutureProvider<List<TransactionEntity>> {
+    extends AutoDisposeStreamProvider<List<TransactionEntity>> {
   /// See also [recentTransactions].
   RecentTransactionsProvider({int limit = 10})
     : this._internal(
@@ -262,7 +262,7 @@ class RecentTransactionsProvider
 
   @override
   Override overrideWith(
-    FutureOr<List<TransactionEntity>> Function(RecentTransactionsRef provider)
+    Stream<List<TransactionEntity>> Function(RecentTransactionsRef provider)
     create,
   ) {
     return ProviderOverride(
@@ -280,7 +280,7 @@ class RecentTransactionsProvider
   }
 
   @override
-  AutoDisposeFutureProviderElement<List<TransactionEntity>> createElement() {
+  AutoDisposeStreamProviderElement<List<TransactionEntity>> createElement() {
     return _RecentTransactionsProviderElement(this);
   }
 
@@ -301,13 +301,13 @@ class RecentTransactionsProvider
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 mixin RecentTransactionsRef
-    on AutoDisposeFutureProviderRef<List<TransactionEntity>> {
+    on AutoDisposeStreamProviderRef<List<TransactionEntity>> {
   /// The parameter `limit` of this provider.
   int get limit;
 }
 
 class _RecentTransactionsProviderElement
-    extends AutoDisposeFutureProviderElement<List<TransactionEntity>>
+    extends AutoDisposeStreamProviderElement<List<TransactionEntity>>
     with RecentTransactionsRef {
   _RecentTransactionsProviderElement(super.provider);
 
