@@ -112,7 +112,7 @@ See [`.github/workflows/flutter.yml`](.github/workflows/flutter.yml).
 
 ## Status
 
-MVP complete (Phases 0–10). Phase 11 (edit + polish) in progress.
+Phases 0–11 complete: full CRUD, edit flows, empty states, error handling, transfers visibility, icon/color pickers, 21 tests, CI green.
 
 For architecture details see [`ARCHITECTURE.md`](ARCHITECTURE.md).  
 For agent/contributor conventions see [`CLAUDE.md`](CLAUDE.md).
