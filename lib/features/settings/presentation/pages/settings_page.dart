@@ -100,9 +100,17 @@ class SettingsPage extends ConsumerWidget {
             subtitle: Text(c.code),
             onTap: () async {
               Navigator.of(ctx).pop();
-              await ref
-                  .read(preferencesRepositoryProvider)
-                  .updateCurrency(c.code, c.symbol);
+              try {
+                await ref
+                    .read(preferencesRepositoryProvider)
+                    .updateCurrency(c.code, c.symbol);
+              } catch (_) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Failed to update currency')),
+                  );
+                }
+              }
             },
           );
         },
@@ -133,9 +141,18 @@ class SettingsPage extends ConsumerWidget {
               onChanged: (v) async {
                 Navigator.of(ctx).pop();
                 if (v != null) {
-                  await ref
-                      .read(preferencesRepositoryProvider)
-                      .updateThemeMode(v);
+                  try {
+                    await ref
+                        .read(preferencesRepositoryProvider)
+                        .updateThemeMode(v);
+                  } catch (_) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Failed to update theme')),
+                      );
+                    }
+                  }
                 }
               },
             );

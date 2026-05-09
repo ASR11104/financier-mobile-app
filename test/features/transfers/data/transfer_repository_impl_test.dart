@@ -107,4 +107,92 @@ void main() {
     final cc = await accountRepo.getById('cc-1');
     expect(cc?.amountUsed, 3000.0);
   });
+
+  test('getById returns inserted transfer', () async {
+    final transfer = TransferEntity(
+      id: 'tr-4',
+      fromAccountId: 'from-acc',
+      toAccountId: 'to-acc',
+      amount: 500.0,
+      date: Formatters.todayAsString(),
+      description: 'test',
+    );
+
+    await transferRepo.insert(transfer);
+
+    final fetched = await transferRepo.getById('tr-4');
+    expect(fetched?.id, 'tr-4');
+    expect(fetched?.amount, 500.0);
+    expect(fetched?.description, 'test');
+  });
+
+  test('delete reverses both account balances', () async {
+    final transfer = TransferEntity(
+      id: 'tr-5',
+      fromAccountId: 'from-acc',
+      toAccountId: 'to-acc',
+      amount: 3000.0,
+      date: Formatters.todayAsString(),
+    );
+
+    await transferRepo.insert(transfer);
+    expect((await accountRepo.getById('from-acc'))?.balance, 7000.0);
+    expect((await accountRepo.getById('to-acc'))?.balance, 3500.0);
+
+    await transferRepo.delete('tr-5');
+    expect((await accountRepo.getById('from-acc'))?.balance, 10000.0);
+    expect((await accountRepo.getById('to-acc'))?.balance, 500.0);
+
+    expect(await transferRepo.getById('tr-5'), isNull);
+  });
+
+  test('delete to credit card restores amountUsed', () async {
+    await accountRepo.insert(AccountEntity(
+      id: 'cc-2',
+      name: 'Visa',
+      type: AccountType.creditCard,
+      balance: 0.0,
+      creditLimit: 50000.0,
+      amountUsed: 8000.0,
+      icon: 'credit_card',
+      color: '#E91E63',
+      isActive: true,
+      notes: '',
+      createdAt: DateTime.now(),
+    ));
+
+    final transfer = TransferEntity(
+      id: 'tr-6',
+      fromAccountId: 'from-acc',
+      toAccountId: 'cc-2',
+      amount: 4000.0,
+      date: Formatters.todayAsString(),
+    );
+
+    await transferRepo.insert(transfer);
+    expect((await accountRepo.getById('cc-2'))?.amountUsed, 4000.0);
+
+    await transferRepo.delete('tr-6');
+    expect((await accountRepo.getById('cc-2'))?.amountUsed, 8000.0);
+    expect((await accountRepo.getById('from-acc'))?.balance, 10000.0);
+  });
+
+  test('update changes amount and adjusts both balances', () async {
+    final transfer = TransferEntity(
+      id: 'tr-7',
+      fromAccountId: 'from-acc',
+      toAccountId: 'to-acc',
+      amount: 1000.0,
+      date: Formatters.todayAsString(),
+    );
+
+    await transferRepo.insert(transfer);
+    expect((await accountRepo.getById('from-acc'))?.balance, 9000.0);
+    expect((await accountRepo.getById('to-acc'))?.balance, 1500.0);
+
+    await transferRepo.update(transfer.copyWith(amount: 2500.0));
+
+    expect((await accountRepo.getById('from-acc'))?.balance, 7500.0);
+    expect((await accountRepo.getById('to-acc'))?.balance, 3000.0);
+  });
 }

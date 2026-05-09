@@ -15,7 +15,9 @@ import '../../domain/entities/transaction_entity.dart';
 import '../../providers/transactions_providers.dart';
 
 class AddTransactionSheet extends ConsumerStatefulWidget {
-  const AddTransactionSheet({super.key});
+  final TransactionEntity? editing;
+
+  const AddTransactionSheet({super.key, this.editing});
 
   @override
   ConsumerState<AddTransactionSheet> createState() =>
@@ -27,13 +29,33 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  TransactionType _type = TransactionType.expense;
+  late TransactionType _type;
   AccountEntity? _account;
   CategoryEntity? _category;
   InvestmentType? _investmentType;
-  DateTime _date = DateTime.now();
+  late DateTime _date;
   final Set<String> _selectedTagIds = {};
   bool _saving = false;
+
+  bool get _isEditing => widget.editing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.editing;
+    if (e != null) {
+      _type = e.type;
+      _amountController.text = e.amount.toString();
+      _descriptionController.text = e.description;
+      _investmentType = e.investmentType;
+      _date = Formatters.stringToDate(e.date);
+      _selectedTagIds.addAll(e.tagIds);
+      // _account and _category are lazily matched in build from the provider lists
+    } else {
+      _type = TransactionType.expense;
+      _date = DateTime.now();
+    }
+  }
 
   @override
   void dispose() {
@@ -60,7 +82,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     setState(() => _saving = true);
 
     final txn = TransactionEntity(
-      id: const Uuid().v4(),
+      id: widget.editing?.id ?? const Uuid().v4(),
       type: _type,
       amount: double.parse(_amountController.text),
       accountId: _account!.id,
@@ -72,7 +94,12 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     );
 
     try {
-      await ref.read(transactionRepositoryProvider).insert(txn);
+      final repo = ref.read(transactionRepositoryProvider);
+      if (_isEditing) {
+        await repo.update(txn);
+      } else {
+        await repo.insert(txn);
+      }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -87,8 +114,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   @override
   Widget build(BuildContext context) {
     final accountsAsync = ref.watch(accountsProvider);
-    final categoriesAsync =
-        ref.watch(categoriesByTypeProvider(_type.value));
+    final categoriesAsync = ref.watch(categoriesByTypeProvider(_type.value));
     final tagsAsync = ref.watch(tagsProvider);
 
     return Padding(
@@ -107,8 +133,10 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             children: [
               Row(
                 children: [
-                  Text('Add Transaction',
-                      style: AppTextStyles.headlineSmall()),
+                  Text(
+                    _isEditing ? 'Edit Transaction' : 'Add Transaction',
+                    style: AppTextStyles.headlineSmall(),
+                  ),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -117,7 +145,6 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                 ],
               ),
               const SizedBox(height: 12),
-              // Type selector
               Row(
                 children: TransactionType.values.map((t) {
                   final selected = _type == t;
@@ -138,7 +165,6 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                 }).toList(),
               ),
               const SizedBox(height: 12),
-              // Amount
               TextFormField(
                 controller: _amountController,
                 decoration: const InputDecoration(
@@ -155,42 +181,53 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                 },
               ),
               const SizedBox(height: 12),
-              // Account picker
               accountsAsync.when(
-                data: (accounts) => DropdownButtonFormField<AccountEntity>(
-                  // ignore: deprecated_member_use
-                  value: _account,
-                  decoration: const InputDecoration(labelText: 'Account'),
-                  items: accounts
-                      .map((a) =>
-                          DropdownMenuItem(value: a, child: Text(a.name)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _account = v),
-                  validator: (v) =>
-                      v == null ? 'Select an account' : null,
-                ),
+                data: (accounts) {
+                  // Lazy-init account from editing entity id
+                  if (_account == null && widget.editing != null) {
+                    _account = accounts
+                        .where((a) => a.id == widget.editing!.accountId)
+                        .firstOrNull;
+                  }
+                  return DropdownButtonFormField<AccountEntity>(
+                    // ignore: deprecated_member_use
+                    value: _account,
+                    decoration: const InputDecoration(labelText: 'Account'),
+                    items: accounts
+                        .map((a) =>
+                            DropdownMenuItem(value: a, child: Text(a.name)))
+                        .toList(),
+                    onChanged: (v) => setState(() => _account = v),
+                    validator: (v) => v == null ? 'Select an account' : null,
+                  );
+                },
                 loading: () => const LinearProgressIndicator(),
                 error: (e, _) => Text('Error: $e'),
               ),
               const SizedBox(height: 12),
-              // Category picker
               categoriesAsync.when(
-                data: (cats) => DropdownButtonFormField<CategoryEntity>(
-                  // ignore: deprecated_member_use
-                  value: _category,
-                  decoration: const InputDecoration(labelText: 'Category'),
-                  items: cats
-                      .map((c) =>
-                          DropdownMenuItem(value: c, child: Text(c.name)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _category = v),
-                  validator: (v) =>
-                      v == null ? 'Select a category' : null,
-                ),
+                data: (cats) {
+                  // Lazy-init category from editing entity id
+                  if (_category == null && widget.editing != null) {
+                    _category = cats
+                        .where((c) => c.id == widget.editing!.categoryId)
+                        .firstOrNull;
+                  }
+                  return DropdownButtonFormField<CategoryEntity>(
+                    // ignore: deprecated_member_use
+                    value: _category,
+                    decoration: const InputDecoration(labelText: 'Category'),
+                    items: cats
+                        .map((c) =>
+                            DropdownMenuItem(value: c, child: Text(c.name)))
+                        .toList(),
+                    onChanged: (v) => setState(() => _category = v),
+                    validator: (v) => v == null ? 'Select a category' : null,
+                  );
+                },
                 loading: () => const LinearProgressIndicator(),
                 error: (e, _) => Text('Error: $e'),
               ),
-              // Investment type (only for investment)
               if (_type == TransactionType.investment) ...[
                 const SizedBox(height: 12),
                 DropdownButtonFormField<InvestmentType>(
@@ -210,7 +247,6 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                 ),
               ],
               const SizedBox(height: 12),
-              // Date picker
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.calendar_today_outlined),
@@ -226,14 +262,12 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                   if (picked != null) setState(() => _date = picked);
                 },
               ),
-              // Description
               TextFormField(
                 controller: _descriptionController,
-                decoration:
-                    const InputDecoration(labelText: 'Description (optional)'),
+                decoration: const InputDecoration(
+                    labelText: 'Description (optional)'),
               ),
               const SizedBox(height: 8),
-              // Tags
               tagsAsync.when(
                 data: (tags) {
                   if (tags.isEmpty) return const SizedBox.shrink();
@@ -241,14 +275,12 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 8),
-                      Text('Tags',
-                          style: AppTextStyles.labelMedium()),
+                      Text('Tags', style: AppTextStyles.labelMedium()),
                       const SizedBox(height: 6),
                       Wrap(
                         spacing: 6,
                         children: tags.map((tag) {
-                          final selected =
-                              _selectedTagIds.contains(tag.id);
+                          final selected = _selectedTagIds.contains(tag.id);
                           return FilterChip(
                             label: Text(tag.name),
                             selected: selected,
@@ -277,7 +309,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Save Transaction'),
+                    : Text(_isEditing ? 'Save Changes' : 'Save Transaction'),
               ),
             ],
           ),

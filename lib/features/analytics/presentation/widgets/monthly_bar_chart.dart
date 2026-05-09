@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../providers/analytics_providers.dart';
 
 class MonthlyBarChart extends ConsumerWidget {
@@ -19,11 +20,10 @@ class MonthlyBarChart extends ConsumerWidget {
         : AppColors.lightTextSecondary;
 
     if (data.every((m) => m.income == 0 && m.expense == 0)) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(32),
-          child: Text('No data yet'),
-        ),
+      return const EmptyState(
+        icon: Icons.bar_chart_outlined,
+        title: 'No data yet',
+        hint: 'Add transactions to see your monthly trends',
       );
     }
 

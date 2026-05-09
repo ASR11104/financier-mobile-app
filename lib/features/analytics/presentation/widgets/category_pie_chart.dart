@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../providers/analytics_providers.dart';
 
 class CategoryPieChart extends ConsumerStatefulWidget {
@@ -21,11 +22,10 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart> {
     final data = ref.watch(categorySpendingProvider);
 
     if (data.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(32),
-          child: Text('No expense data this month'),
-        ),
+      return const EmptyState(
+        icon: Icons.pie_chart_outline,
+        title: 'No expense data this month',
+        hint: 'Add some expenses to see spending by category',
       );
     }
 

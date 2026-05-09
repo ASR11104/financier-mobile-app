@@ -9,7 +9,9 @@ import '../../domain/entities/account_entity.dart';
 import '../../providers/accounts_providers.dart';
 
 class AddAccountSheet extends ConsumerStatefulWidget {
-  const AddAccountSheet({super.key});
+  final AccountEntity? editing;
+
+  const AddAccountSheet({super.key, this.editing});
 
   @override
   ConsumerState<AddAccountSheet> createState() => _AddAccountSheetState();
@@ -22,8 +24,28 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
   final _creditLimitController = TextEditingController();
   final _notesController = TextEditingController();
 
-  AccountType _type = AccountType.bankAccount;
+  late AccountType _type;
   bool _saving = false;
+
+  bool get _isEditing => widget.editing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.editing;
+    if (e != null) {
+      _nameController.text = e.name;
+      _type = e.type;
+      if (e.type == AccountType.creditCard) {
+        _creditLimitController.text = (e.creditLimit ?? 0).toString();
+      } else {
+        _balanceController.text = e.balance.toString();
+      }
+      _notesController.text = e.notes;
+    } else {
+      _type = AccountType.bankAccount;
+    }
+  }
 
   @override
   void dispose() {
@@ -42,24 +64,29 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
     final creditLimit =
         isCreditCard ? double.tryParse(_creditLimitController.text) : null;
     final balance =
-        isCreditCard ? 0.0 : (double.tryParse(_balanceController.text) ?? 0.0);
+        isCreditCard ? (widget.editing?.balance ?? 0.0) : (double.tryParse(_balanceController.text) ?? 0.0);
 
     final account = AccountEntity(
-      id: const Uuid().v4(),
+      id: widget.editing?.id ?? const Uuid().v4(),
       name: _nameController.text.trim(),
       type: _type,
       balance: balance,
       creditLimit: creditLimit,
-      amountUsed: isCreditCard ? 0.0 : null,
+      amountUsed: isCreditCard ? (widget.editing?.amountUsed ?? 0.0) : null,
       icon: _type.value,
       color: _typeHex(_type),
       isActive: true,
       notes: _notesController.text.trim(),
-      createdAt: DateTime.now(),
+      createdAt: widget.editing?.createdAt ?? DateTime.now(),
     );
 
     try {
-      await ref.read(accountRepositoryProvider).insert(account);
+      final repo = ref.read(accountRepositoryProvider);
+      if (_isEditing) {
+        await repo.update(account);
+      } else {
+        await repo.insert(account);
+      }
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       if (mounted) {
@@ -92,7 +119,10 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
           children: [
             Row(
               children: [
-                Text('Add Account', style: AppTextStyles.headlineSmall()),
+                Text(
+                  _isEditing ? 'Edit Account' : 'Add Account',
+                  style: AppTextStyles.headlineSmall(),
+                ),
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -112,12 +142,14 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
                   (v == null || v.trim().isEmpty) ? 'Name required' : null,
             ),
             const SizedBox(height: 16),
-            Text('Account type',
-                style: AppTextStyles.labelMedium(
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
-                )),
+            Text(
+              'Account type',
+              style: AppTextStyles.labelMedium(
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary,
+              ),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -126,7 +158,8 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
                 return ChoiceChip(
                   label: Text(t.label),
                   selected: selected,
-                  onSelected: (_) => setState(() => _type = t),
+                  // Disable type change in edit mode — changing type invalidates ledger semantics
+                  onSelected: _isEditing ? null : (_) => setState(() => _type = t),
                 );
               }).toList(),
             ),
@@ -134,8 +167,8 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
             if (!isCreditCard)
               TextFormField(
                 controller: _balanceController,
-                decoration: const InputDecoration(
-                  labelText: 'Initial balance',
+                decoration: InputDecoration(
+                  labelText: _isEditing ? 'Balance' : 'Initial balance',
                   prefixText: '₹ ',
                 ),
                 keyboardType:
@@ -177,7 +210,7 @@ class _AddAccountSheetState extends ConsumerState<AddAccountSheet> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Add Account'),
+                  : Text(_isEditing ? 'Save Changes' : 'Add Account'),
             ),
           ],
         ),

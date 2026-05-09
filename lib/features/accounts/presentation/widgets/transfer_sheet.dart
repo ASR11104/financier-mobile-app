@@ -10,7 +10,9 @@ import '../../../transfers/domain/entities/transfer_entity.dart';
 import '../../../transfers/providers/transfers_providers.dart';
 
 class TransferSheet extends ConsumerStatefulWidget {
-  const TransferSheet({super.key});
+  final TransferEntity? editing;
+
+  const TransferSheet({super.key, this.editing});
 
   @override
   ConsumerState<TransferSheet> createState() => _TransferSheetState();
@@ -23,8 +25,24 @@ class _TransferSheetState extends ConsumerState<TransferSheet> {
 
   AccountEntity? _fromAccount;
   AccountEntity? _toAccount;
-  DateTime _date = DateTime.now();
+  late DateTime _date;
   bool _saving = false;
+
+  bool get _isEditing => widget.editing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.editing;
+    if (e != null) {
+      _amountController.text = e.amount.toString();
+      _descriptionController.text = e.description;
+      _date = Formatters.stringToDate(e.date);
+      // _fromAccount and _toAccount lazily matched in build
+    } else {
+      _date = DateTime.now();
+    }
+  }
 
   @override
   void dispose() {
@@ -49,7 +67,7 @@ class _TransferSheetState extends ConsumerState<TransferSheet> {
     setState(() => _saving = true);
 
     final transfer = TransferEntity(
-      id: const Uuid().v4(),
+      id: widget.editing?.id ?? const Uuid().v4(),
       fromAccountId: _fromAccount!.id,
       toAccountId: _toAccount!.id,
       amount: double.parse(_amountController.text),
@@ -58,7 +76,12 @@ class _TransferSheetState extends ConsumerState<TransferSheet> {
     );
 
     try {
-      await ref.read(transferRepositoryProvider).insert(transfer);
+      final repo = ref.read(transferRepositoryProvider);
+      if (_isEditing) {
+        await repo.update(transfer);
+      } else {
+        await repo.insert(transfer);
+      }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -86,6 +109,18 @@ class _TransferSheetState extends ConsumerState<TransferSheet> {
   }
 
   Widget _buildForm(BuildContext context, List<AccountEntity> accounts) {
+    // Lazy-init from editing entity ids
+    if (_fromAccount == null && widget.editing != null) {
+      _fromAccount = accounts
+          .where((a) => a.id == widget.editing!.fromAccountId)
+          .firstOrNull;
+    }
+    if (_toAccount == null && widget.editing != null) {
+      _toAccount = accounts
+          .where((a) => a.id == widget.editing!.toAccountId)
+          .firstOrNull;
+    }
+
     return Padding(
       padding: EdgeInsets.fromLTRB(
         16,
@@ -101,7 +136,10 @@ class _TransferSheetState extends ConsumerState<TransferSheet> {
           children: [
             Row(
               children: [
-                Text('Transfer', style: AppTextStyles.headlineSmall()),
+                Text(
+                  _isEditing ? 'Edit Transfer' : 'Transfer',
+                  style: AppTextStyles.headlineSmall(),
+                ),
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -174,7 +212,7 @@ class _TransferSheetState extends ConsumerState<TransferSheet> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Transfer'),
+                  : Text(_isEditing ? 'Save Changes' : 'Transfer'),
             ),
           ],
         ),

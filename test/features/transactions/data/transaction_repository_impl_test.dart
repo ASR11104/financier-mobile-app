@@ -36,7 +36,7 @@ void main() {
       createdAt: DateTime.now(),
     ));
 
-    await categoryRepo.insert(CategoryEntity(
+    await categoryRepo.insert(const CategoryEntity(
       id: 'cat-1',
       name: 'Food',
       type: TransactionType.expense,
@@ -67,7 +67,7 @@ void main() {
   });
 
   test('insert income increases account balance', () async {
-    await categoryRepo.insert(CategoryEntity(
+    await categoryRepo.insert(const CategoryEntity(
       id: 'cat-inc',
       name: 'Salary',
       type: TransactionType.income,
@@ -126,5 +126,63 @@ void main() {
 
     final txns = await txnRepo.watchAll().first;
     expect(txns.any((t) => t.id == 'txn-4'), false);
+  });
+
+  test('update changes amount and adjusts balance correctly', () async {
+    final txn = TransactionEntity(
+      id: 'txn-5',
+      type: TransactionType.expense,
+      amount: 500.0,
+      accountId: 'acc-1',
+      categoryId: 'cat-1',
+      date: Formatters.todayAsString(),
+      description: 'Dinner',
+    );
+
+    await txnRepo.insert(txn);
+    expect((await accountRepo.getById('acc-1'))?.balance, 9500.0);
+
+    // Update: increase amount to 800
+    await txnRepo.update(txn.copyWith(amount: 800.0, description: 'Fancy Dinner'));
+
+    expect((await accountRepo.getById('acc-1'))?.balance, 9200.0);
+
+    final updated = await txnRepo.getById('txn-5');
+    expect(updated?.amount, 800.0);
+    expect(updated?.description, 'Fancy Dinner');
+  });
+
+  test('update across accounts moves balance correctly', () async {
+    await accountRepo.insert(AccountEntity(
+      id: 'acc-2',
+      name: 'Wallet',
+      type: AccountType.cash,
+      balance: 5000.0,
+      icon: 'wallet',
+      color: '#FF9800',
+      isActive: true,
+      notes: '',
+      createdAt: DateTime.now(),
+    ));
+
+    final txn = TransactionEntity(
+      id: 'txn-6',
+      type: TransactionType.expense,
+      amount: 300.0,
+      accountId: 'acc-1',
+      categoryId: 'cat-1',
+      date: Formatters.todayAsString(),
+    );
+
+    await txnRepo.insert(txn);
+    expect((await accountRepo.getById('acc-1'))?.balance, 9700.0);
+
+    // Move transaction to acc-2 with a different amount
+    await txnRepo.update(txn.copyWith(accountId: 'acc-2', amount: 200.0));
+
+    // acc-1 should be fully reversed (back to 10000)
+    expect((await accountRepo.getById('acc-1'))?.balance, 10000.0);
+    // acc-2 should have 200 deducted
+    expect((await accountRepo.getById('acc-2'))?.balance, 4800.0);
   });
 }

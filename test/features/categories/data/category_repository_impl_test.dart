@@ -13,7 +13,7 @@ void main() {
     repo = CategoryRepositoryImpl(db.categoriesDao);
   });
 
-  CategoryEntity _makeCategory({
+  CategoryEntity makeCategory({
     String id = 'cat-1',
     String name = 'Food',
     TransactionType type = TransactionType.expense,
@@ -31,15 +31,15 @@ void main() {
   }
 
   test('insert and watchAll emits category', () async {
-    await repo.insert(_makeCategory());
+    await repo.insert(makeCategory());
 
     final cats = await repo.watchAll().first;
     expect(cats.any((c) => c.id == 'cat-1'), true);
   });
 
   test('watchByType filters by type', () async {
-    await repo.insert(_makeCategory(id: 'exp-1', type: TransactionType.expense));
-    await repo.insert(_makeCategory(
+    await repo.insert(makeCategory(id: 'exp-1', type: TransactionType.expense));
+    await repo.insert(makeCategory(
         id: 'inc-1', name: 'Salary', type: TransactionType.income));
 
     final expenseCats =
@@ -52,7 +52,7 @@ void main() {
   });
 
   test('delete removes user-created category', () async {
-    await repo.insert(_makeCategory(id: 'del-1'));
+    await repo.insert(makeCategory(id: 'del-1'));
     await repo.delete('del-1');
 
     final cats = await repo.watchAll().first;
@@ -60,7 +60,7 @@ void main() {
   });
 
   test('delete does not remove default category', () async {
-    await repo.insert(_makeCategory(id: 'def-1', isDefault: true));
+    await repo.insert(makeCategory(id: 'def-1', isDefault: true));
     await repo.delete('def-1');
 
     final cats = await repo.watchAll().first;

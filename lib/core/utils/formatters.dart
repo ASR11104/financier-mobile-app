@@ -50,6 +50,11 @@ class Formatters {
     return DateFormat('yyyy-MM-dd').format(date);
   }
 
+  /// Parses a storage-format string (YYYY-MM-DD) to DateTime.
+  static DateTime stringToDate(String dateStr) {
+    return DateTime.parse(dateStr);
+  }
+
   /// Formats a large number in compact form.
   ///
   /// Example: formatCompact(150000) → "1.5L" (for INR) or "150K"

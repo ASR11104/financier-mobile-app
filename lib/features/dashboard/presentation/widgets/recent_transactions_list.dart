@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../../transactions/presentation/widgets/transaction_tile.dart';
 import '../../../transactions/providers/transactions_providers.dart';
 
@@ -14,7 +15,13 @@ class RecentTransactionsList extends ConsumerWidget {
 
     return asyncData.when(
       data: (txns) {
-        if (txns.isEmpty) return const SizedBox.shrink();
+        if (txns.isEmpty) {
+          return const EmptyState(
+            icon: Icons.receipt_long_outlined,
+            title: 'No transactions yet',
+            hint: 'Add your first transaction using the + button',
+          );
+        }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -55,46 +55,16 @@ class TransactionRepositoryImpl implements ITransactionRepository {
 
   @override
   Future<void> insert(TransactionEntity txn) async {
-    final account = await _accountsDao.getById(txn.accountId);
-    if (account == null) throw Exception('Account not found');
+    await _db.transaction(() async => _applyTransaction(txn));
+  }
 
-    final isDebit = txn.type == TransactionType.expense ||
-        txn.type == TransactionType.investment;
-    final entryType = isDebit ? 'debit' : 'credit';
-    final newBalance = isDebit
-        ? account.balance - txn.amount
-        : account.balance + txn.amount;
-
+  @override
+  Future<void> update(TransactionEntity txn) async {
+    final existing = await _transactionsDao.getById(txn.id);
+    if (existing == null) return;
     await _db.transaction(() async {
-      await _transactionsDao.insertTransaction(TransactionsCompanion.insert(
-        id: txn.id,
-        type: txn.type.value,
-        amount: txn.amount,
-        accountId: txn.accountId,
-        categoryId: txn.categoryId,
-        description: Value(txn.description),
-        date: txn.date,
-        investmentType: Value(txn.investmentType?.value),
-      ));
-
-      if (txn.tagIds.isNotEmpty) {
-        await _transactionsDao.setTagsForTransaction(txn.id, txn.tagIds);
-      }
-
-      await _ledgerDao.insertEntry(LedgerEntriesCompanion.insert(
-        id: const Uuid().v4(),
-        accountId: txn.accountId,
-        transactionId: Value(txn.id),
-        entryType: entryType,
-        amount: txn.amount,
-        runningBalance: newBalance,
-        date: txn.date,
-        description: Value(
-          txn.description.isNotEmpty ? txn.description : txn.type.label,
-        ),
-      ));
-
-      await _accountsDao.updateBalance(txn.accountId, newBalance);
+      await _reverseTransaction(existing);
+      await _applyTransaction(txn);
     });
   }
 
@@ -102,7 +72,51 @@ class TransactionRepositoryImpl implements ITransactionRepository {
   Future<void> delete(String id) async {
     final row = await _transactionsDao.getById(id);
     if (row == null) return;
+    await _db.transaction(() async => _reverseTransaction(row));
+  }
 
+  Future<void> _applyTransaction(TransactionEntity txn) async {
+    final account = await _accountsDao.getById(txn.accountId);
+    if (account == null) throw Exception('Account not found');
+
+    final isDebit = txn.type == TransactionType.expense ||
+        txn.type == TransactionType.investment;
+    final newBalance = isDebit
+        ? account.balance - txn.amount
+        : account.balance + txn.amount;
+
+    await _transactionsDao.insertTransaction(TransactionsCompanion.insert(
+      id: txn.id,
+      type: txn.type.value,
+      amount: txn.amount,
+      accountId: txn.accountId,
+      categoryId: txn.categoryId,
+      description: Value(txn.description),
+      date: txn.date,
+      investmentType: Value(txn.investmentType?.value),
+    ));
+
+    if (txn.tagIds.isNotEmpty) {
+      await _transactionsDao.setTagsForTransaction(txn.id, txn.tagIds);
+    }
+
+    await _ledgerDao.insertEntry(LedgerEntriesCompanion.insert(
+      id: const Uuid().v4(),
+      accountId: txn.accountId,
+      transactionId: Value(txn.id),
+      entryType: isDebit ? 'debit' : 'credit',
+      amount: txn.amount,
+      runningBalance: newBalance,
+      date: txn.date,
+      description: Value(
+        txn.description.isNotEmpty ? txn.description : txn.type.label,
+      ),
+    ));
+
+    await _accountsDao.updateBalance(txn.accountId, newBalance);
+  }
+
+  Future<void> _reverseTransaction(Transaction row) async {
     final account = await _accountsDao.getById(row.accountId);
     if (account == null) return;
 
@@ -112,12 +126,10 @@ class TransactionRepositoryImpl implements ITransactionRepository {
         ? account.balance + row.amount
         : account.balance - row.amount;
 
-    await _db.transaction(() async {
-      await _ledgerDao.deleteByTransactionId(id);
-      await _transactionsDao.removeAllTagsForTransaction(id);
-      await _transactionsDao.deleteTransaction(id);
-      await _accountsDao.updateBalance(row.accountId, reversedBalance);
-    });
+    await _ledgerDao.deleteByTransactionId(row.id);
+    await _transactionsDao.removeAllTagsForTransaction(row.id);
+    await _transactionsDao.deleteTransaction(row.id);
+    await _accountsDao.updateBalance(row.accountId, reversedBalance);
   }
 
   TransactionEntity _toEntity(Transaction row, {List<String> tagIds = const []}) {

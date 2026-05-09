@@ -3,59 +3,53 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
-import '../../../../core/enums/transaction_type.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../accounts/providers/accounts_providers.dart';
-import '../../../categories/providers/categories_providers.dart';
-import '../../domain/entities/transaction_entity.dart';
-import '../../providers/transactions_providers.dart';
-import 'add_transaction_sheet.dart';
+import '../../../accounts/presentation/widgets/transfer_sheet.dart';
+import '../../domain/entities/transfer_entity.dart';
+import '../../providers/transfers_providers.dart';
 
-class TransactionTile extends ConsumerWidget {
-  final TransactionEntity transaction;
+class TransferTile extends ConsumerWidget {
+  final TransferEntity transfer;
   final String currencySymbol;
 
-  const TransactionTile({
+  const TransferTile({
     super.key,
-    required this.transaction,
+    required this.transfer,
     this.currencySymbol = '₹',
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final categoryAsync =
-        ref.watch(categoryByIdProvider(transaction.categoryId));
-    final accountAsync =
-        ref.watch(accountByIdProvider(transaction.accountId));
+    final fromAsync = ref.watch(accountByIdProvider(transfer.fromAccountId));
+    final toAsync = ref.watch(accountByIdProvider(transfer.toAccountId));
 
-    final typeColor = _typeColor(transaction.type);
-    final isDebit = transaction.type == TransactionType.expense ||
-        transaction.type == TransactionType.investment;
-
-    final categoryName = categoryAsync.valueOrNull?.name ?? '…';
-    final accountName = accountAsync.valueOrNull?.name ?? '…';
+    final fromName = fromAsync.valueOrNull?.name ?? '…';
+    final toName = toAsync.valueOrNull?.name ?? '…';
+    final subtitle = transfer.description.isNotEmpty
+        ? '${Formatters.formatDateShort(transfer.date)} · ${transfer.description}'
+        : Formatters.formatDateShort(transfer.date);
 
     return ListTile(
       onTap: () => showModalBottomSheet(
         context: context,
         isScrollControlled: true,
-        builder: (_) => AddTransactionSheet(editing: transaction),
+        builder: (_) => TransferSheet(editing: transfer),
       ),
       leading: CircleAvatar(
-        backgroundColor: typeColor.withValues(alpha: 0.15),
-        child: Icon(_typeIcon(transaction.type), color: typeColor, size: 20),
+        backgroundColor: AppColors.transfer.withValues(alpha: 0.15),
+        child: const Icon(Icons.swap_horiz_rounded,
+            color: AppColors.transfer, size: 20),
       ),
       title: Text(
-        transaction.description.isNotEmpty
-            ? transaction.description
-            : categoryName,
+        '$fromName → $toName',
         style: AppTextStyles.labelLarge(),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: Text(
-        '${Formatters.formatDateShort(transaction.date)} · $accountName',
+        subtitle,
         style: AppTextStyles.bodySmall(
           color: isDark
               ? AppColors.darkTextSecondary
@@ -66,8 +60,8 @@ class TransactionTile extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '${isDebit ? '-' : '+'}${Formatters.formatAmount(transaction.amount, currencySymbol)}',
-            style: AppTextStyles.amountSmall(color: typeColor),
+            Formatters.formatAmount(transfer.amount, currencySymbol),
+            style: AppTextStyles.amountSmall(color: AppColors.transfer),
           ),
           PopupMenuButton<String>(
             padding: EdgeInsets.zero,
@@ -80,9 +74,9 @@ class TransactionTile extends ConsumerWidget {
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (_) => AlertDialog(
-                    title: const Text('Delete transaction?'),
+                    title: const Text('Delete transfer?'),
                     content: const Text(
-                        'This will reverse the account balance change.'),
+                        'This will reverse the balance changes on both accounts.'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(false),
@@ -98,13 +92,13 @@ class TransactionTile extends ConsumerWidget {
                 if (confirmed == true) {
                   try {
                     await ref
-                        .read(transactionRepositoryProvider)
-                        .delete(transaction.id);
+                        .read(transferRepositoryProvider)
+                        .delete(transfer.id);
                   } catch (_) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                            content: Text('Failed to delete transaction')),
+                            content: Text('Failed to delete transfer')),
                       );
                     }
                   }
@@ -115,21 +109,5 @@ class TransactionTile extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  static Color _typeColor(TransactionType type) {
-    return switch (type) {
-      TransactionType.expense => AppColors.expense,
-      TransactionType.income => AppColors.income,
-      TransactionType.investment => AppColors.investment,
-    };
-  }
-
-  static IconData _typeIcon(TransactionType type) {
-    return switch (type) {
-      TransactionType.expense => Icons.arrow_upward_rounded,
-      TransactionType.income => Icons.arrow_downward_rounded,
-      TransactionType.investment => Icons.trending_up_rounded,
-    };
   }
 }

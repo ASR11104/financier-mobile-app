@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/enums/transaction_type.dart';
+import '../../../../core/widgets/empty_state.dart';
+import '../../../transfers/presentation/widgets/transfer_tile.dart';
+import '../../../transfers/providers/transfers_providers.dart';
 import '../../providers/transactions_providers.dart';
 import '../widgets/add_transaction_sheet.dart';
 import '../widgets/transaction_tile.dart';
@@ -18,12 +21,7 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
 
-  static const _tabs = [
-    (label: 'All', type: null),
-    (label: 'Expense', type: TransactionType.expense),
-    (label: 'Income', type: TransactionType.income),
-    (label: 'Investment', type: TransactionType.investment),
-  ];
+  static const _tabs = ['All', 'Expense', 'Income', 'Investment', 'Transfers'];
 
   @override
   void initState() {
@@ -46,12 +44,18 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage>
           controller: _tabController,
           isScrollable: true,
           tabAlignment: TabAlignment.start,
-          tabs: _tabs.map((t) => Tab(text: t.label)).toList(),
+          tabs: _tabs.map((t) => Tab(text: t)).toList(),
         ),
       ),
       body: TabBarView(
         controller: _tabController,
-        children: _tabs.map((t) => _TransactionList(type: t.type)).toList(),
+        children: [
+          const _TransactionList(type: null),
+          const _TransactionList(type: TransactionType.expense),
+          const _TransactionList(type: TransactionType.income),
+          const _TransactionList(type: TransactionType.investment),
+          const _TransferList(),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -82,38 +86,46 @@ class _TransactionList extends ConsumerWidget {
     return asyncData.when(
       data: (txns) {
         if (txns.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.receipt_long_rounded,
-                  size: 64,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.5),
-                ),
-                const SizedBox(height: 16),
-                Text('No transactions yet',
-                    style: AppTextStyles.headlineSmall()),
-                const SizedBox(height: 8),
-                Text(
-                  'Tap + to add your first transaction',
-                  style: AppTextStyles.bodyMedium(
-                    color:
-                        Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
+          return EmptyState(
+            icon: Icons.receipt_long_outlined,
+            title: type == null
+                ? 'No transactions yet'
+                : 'No ${type!.label.toLowerCase()} transactions',
+            hint: 'Tap + to add your first transaction',
           );
         }
         return ListView.builder(
           padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: txns.length,
-          itemBuilder: (context, i) =>
-              TransactionTile(transaction: txns[i]),
+          itemBuilder: (_, i) => TransactionTile(transaction: txns[i]),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Error: $e')),
+    );
+  }
+}
+
+class _TransferList extends ConsumerWidget {
+  const _TransferList();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncData = ref.watch(transfersProvider);
+
+    return asyncData.when(
+      data: (transfers) {
+        if (transfers.isEmpty) {
+          return const EmptyState(
+            icon: Icons.swap_horiz_outlined,
+            title: 'No transfers yet',
+            hint: 'Go to Accounts and tap the transfer button',
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: transfers.length,
+          itemBuilder: (_, i) => TransferTile(transfer: transfers[i]),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
