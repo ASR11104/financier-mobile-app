@@ -73,17 +73,17 @@ class TransferTile extends ConsumerWidget {
               if (value == 'delete') {
                 final confirmed = await showDialog<bool>(
                   context: context,
-                  builder: (_) => AlertDialog(
+                  builder: (ctx) => AlertDialog(
                     title: const Text('Delete transfer?'),
                     content: const Text(
                         'This will reverse the balance changes on both accounts.'),
                     actions: [
                       TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
+                        onPressed: () => Navigator.of(ctx).pop(false),
                         child: const Text('Cancel'),
                       ),
                       FilledButton(
-                        onPressed: () => Navigator.of(context).pop(true),
+                        onPressed: () => Navigator.of(ctx).pop(true),
                         child: const Text('Delete'),
                       ),
                     ],

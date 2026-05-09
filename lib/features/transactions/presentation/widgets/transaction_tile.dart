@@ -79,17 +79,17 @@ class TransactionTile extends ConsumerWidget {
               if (value == 'delete') {
                 final confirmed = await showDialog<bool>(
                   context: context,
-                  builder: (_) => AlertDialog(
+                  builder: (ctx) => AlertDialog(
                     title: const Text('Delete transaction?'),
                     content: const Text(
                         'This will reverse the account balance change.'),
                     actions: [
                       TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
+                        onPressed: () => Navigator.of(ctx).pop(false),
                         child: const Text('Cancel'),
                       ),
                       FilledButton(
-                        onPressed: () => Navigator.of(context).pop(true),
+                        onPressed: () => Navigator.of(ctx).pop(true),
                         child: const Text('Delete'),
                       ),
                     ],

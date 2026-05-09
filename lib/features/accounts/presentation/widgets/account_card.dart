@@ -77,17 +77,17 @@ class AccountCard extends ConsumerWidget {
                   if (value == 'archive') {
                     final confirmed = await showDialog<bool>(
                       context: context,
-                      builder: (_) => AlertDialog(
+                      builder: (ctx) => AlertDialog(
                         title: const Text('Archive account?'),
                         content: Text(
                             '${account.name} will be hidden from your active accounts.'),
                         actions: [
                           TextButton(
-                            onPressed: () => Navigator.of(context).pop(false),
+                            onPressed: () => Navigator.of(ctx).pop(false),
                             child: const Text('Cancel'),
                           ),
                           FilledButton(
-                            onPressed: () => Navigator.of(context).pop(true),
+                            onPressed: () => Navigator.of(ctx).pop(true),
                             child: const Text('Archive'),
                           ),
                         ],
