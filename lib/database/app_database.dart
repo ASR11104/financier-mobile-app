@@ -2,7 +2,9 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import 'tables/accounts_table.dart';
+import 'tables/budgets_table.dart';
 import 'tables/categories_table.dart';
+import 'tables/goals_table.dart';
 import 'tables/ledger_entries_table.dart';
 import 'tables/tags_table.dart';
 import 'tables/transaction_tags_table.dart';
@@ -10,7 +12,9 @@ import 'tables/transactions_table.dart';
 import 'tables/transfers_table.dart';
 import 'tables/user_preferences_table.dart';
 import 'daos/accounts_dao.dart';
+import 'daos/budgets_dao.dart';
 import 'daos/categories_dao.dart';
+import 'daos/goals_dao.dart';
 import 'daos/ledger_dao.dart';
 import 'daos/preferences_dao.dart';
 import 'daos/tags_dao.dart';
@@ -19,10 +23,6 @@ import 'daos/transfers_dao.dart';
 
 part 'app_database.g.dart';
 
-/// The main database for the Finsight app.
-///
-/// Uses Drift ORM on top of SQLite for type-safe, reactive queries.
-/// The database is local-only — all data lives on the device.
 @DriftDatabase(
   tables: [
     Accounts,
@@ -33,6 +33,8 @@ part 'app_database.g.dart';
     Transfers,
     LedgerEntries,
     UserPreferences,
+    Budgets,
+    Goals,
   ],
   daos: [
     AccountsDao,
@@ -42,6 +44,8 @@ part 'app_database.g.dart';
     TransfersDao,
     LedgerDao,
     PreferencesDao,
+    BudgetsDao,
+    GoalsDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -50,7 +54,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(name: 'finsight_db');
@@ -62,7 +66,13 @@ class AppDatabase extends _$AppDatabase {
           await m.createAll();
         },
         onUpgrade: (Migrator m, int from, int to) async {
-          // Future migrations go here
+          if (from < 2) {
+            await m.addColumn(
+                userPreferences, userPreferences.isLockEnabled);
+            await m.addColumn(transactions, transactions.goalId);
+            await m.createTable(budgets);
+            await m.createTable(goals);
+          }
         },
       );
 }

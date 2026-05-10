@@ -17,5 +17,6 @@ class TransactionEntity with _$TransactionEntity {
     @Default('') String description,
     InvestmentType? investmentType,
     @Default([]) List<String> tagIds,
+    String? goalId,
   }) = _TransactionEntity;
 }

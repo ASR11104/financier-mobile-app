@@ -183,15 +183,19 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
               const SizedBox(height: 12),
               accountsAsync.when(
                 data: (accounts) {
-                  // Lazy-init account from editing entity id
                   if (_account == null && widget.editing != null) {
                     _account = accounts
                         .where((a) => a.id == widget.editing!.accountId)
                         .firstOrNull;
                   }
+                  // Always resolve from live list by ID so stale references
+                  // don't break the dropdown when the stream re-emits.
+                  final dropdownAccount = _account == null
+                      ? null
+                      : accounts.where((a) => a.id == _account!.id).firstOrNull;
                   return DropdownButtonFormField<AccountEntity>(
                     // ignore: deprecated_member_use
-                    value: _account,
+                    value: dropdownAccount,
                     decoration: const InputDecoration(labelText: 'Account'),
                     items: accounts
                         .map((a) =>
@@ -207,15 +211,17 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
               const SizedBox(height: 12),
               categoriesAsync.when(
                 data: (cats) {
-                  // Lazy-init category from editing entity id
                   if (_category == null && widget.editing != null) {
                     _category = cats
                         .where((c) => c.id == widget.editing!.categoryId)
                         .firstOrNull;
                   }
+                  final dropdownCategory = _category == null
+                      ? null
+                      : cats.where((c) => c.id == _category!.id).firstOrNull;
                   return DropdownButtonFormField<CategoryEntity>(
                     // ignore: deprecated_member_use
-                    value: _category,
+                    value: dropdownCategory,
                     decoration: const InputDecoration(labelText: 'Category'),
                     items: cats
                         .map((c) =>

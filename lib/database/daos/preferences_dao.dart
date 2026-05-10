@@ -45,4 +45,14 @@ class PreferencesDao extends DatabaseAccessor<AppDatabase>
       ),
     );
   }
+
+  /// Enable or disable app lock (biometric/device auth).
+  Future<void> updateAppLock(bool enabled) {
+    return (update(userPreferences)..where((p) => p.id.equals(1))).write(
+      UserPreferencesCompanion(
+        isLockEnabled: Value(enabled ? 1 : 0),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
 }

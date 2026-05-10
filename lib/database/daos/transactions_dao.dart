@@ -109,4 +109,41 @@ class TransactionsDao extends DatabaseAccessor<AppDatabase>
           ..where((tt) => tt.transactionId.equals(transactionId)))
         .go();
   }
+
+  /// Watch transactions linked to a specific goal.
+  Stream<List<Transaction>> watchByGoal(String goalId) {
+    return (select(transactions)
+          ..where((t) => t.goalId.equals(goalId))
+          ..orderBy([
+            (t) => OrderingTerm.desc(t.date),
+            (t) => OrderingTerm.desc(t.createdAt),
+          ]))
+        .watch();
+  }
+
+  /// Get transactions linked to a specific goal.
+  Future<List<Transaction>> getByGoal(String goalId) {
+    return (select(transactions)
+          ..where((t) => t.goalId.equals(goalId))
+          ..orderBy([
+            (t) => OrderingTerm.desc(t.date),
+            (t) => OrderingTerm.desc(t.createdAt),
+          ]))
+        .get();
+  }
+
+  /// Watch expense transactions for a category matching a date prefix.
+  ///
+  /// [datePrefix] is 'YYYY-MM' for monthly or 'YYYY' for yearly budgets.
+  Stream<List<Transaction>> watchExpensesByCategoryAndPrefix(
+    String categoryId,
+    String datePrefix,
+  ) {
+    return (select(transactions)
+          ..where((t) =>
+              t.categoryId.equals(categoryId) &
+              t.type.equals('expense') &
+              t.date.like('$datePrefix%')))
+        .watch();
+  }
 }

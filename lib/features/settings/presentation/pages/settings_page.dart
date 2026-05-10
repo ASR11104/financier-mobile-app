@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,13 +7,22 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/currency_list.dart';
+import '../../../../core/di/injection.dart';
+import '../../../../core/services/biometric_auth_service.dart';
 import '../../providers/settings_providers.dart';
 
-class SettingsPage extends ConsumerWidget {
+class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends ConsumerState<SettingsPage> {
+  bool _lockToggling = false;
+
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final prefsAsync = ref.watch(preferencesProvider);
     final prefs = prefsAsync.valueOrNull;
@@ -36,7 +46,7 @@ class SettingsPage extends ConsumerWidget {
             title: 'Currency',
             subtitle: currencyLabel,
             isDark: isDark,
-            onTap: () => _showCurrencyPicker(context, ref),
+            onTap: () => _showCurrencyPicker(context),
           ),
           _tile(
             context,
@@ -44,7 +54,35 @@ class SettingsPage extends ConsumerWidget {
             title: 'Theme',
             subtitle: themeLabel,
             isDark: isDark,
-            onTap: () => _showThemePicker(context, ref, prefs?.themeMode ?? 'system'),
+            onTap: () =>
+                _showThemePicker(context, prefs?.themeMode ?? 'system'),
+          ),
+          const SizedBox(height: 24),
+          _sectionHeader('Security', isDark),
+          const SizedBox(height: 8),
+          Card(
+            margin: const EdgeInsets.only(bottom: 4),
+            child: SwitchListTile(
+              secondary: const Icon(Icons.lock_outline, color: AppColors.primary),
+              title: Text(
+                'App Lock',
+                style: AppTextStyles.bodyLarge(
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
+                ),
+              ),
+              subtitle: Text(
+                'Require biometric or device PIN to open',
+                style: AppTextStyles.bodySmall(
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
+              ),
+              value: prefs?.isLockEnabled ?? false,
+              onChanged: _lockToggling ? null : (val) => _toggleLock(val),
+            ),
           ),
           const SizedBox(height: 24),
           _sectionHeader('Data', isDark),
@@ -85,7 +123,38 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  void _showCurrencyPicker(BuildContext context, WidgetRef ref) {
+  Future<void> _toggleLock(bool enable) async {
+    setState(() => _lockToggling = true);
+    try {
+      if (enable) {
+        final auth = getIt<BiometricAuthService>();
+        final canAuth = kDebugMode || await auth.canAuthenticate();
+        if (!canAuth) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text(
+                      'No biometric or device PIN set up on this device')),
+            );
+          }
+          return;
+        }
+        final ok = kDebugMode ||
+            await auth.authenticate('Confirm identity to enable App Lock');
+        if (!ok) return;
+      }
+      await ref.read(preferencesRepositoryProvider).setAppLock(enable);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _lockToggling = false);
+    }
+  }
+
+  void _showCurrencyPicker(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
       builder: (ctx) => ListView.builder(
@@ -94,8 +163,7 @@ class SettingsPage extends ConsumerWidget {
         itemBuilder: (_, i) {
           final c = supportedCurrencies[i];
           return ListTile(
-            leading: Text(c.symbol,
-                style: const TextStyle(fontSize: 20)),
+            leading: Text(c.symbol, style: const TextStyle(fontSize: 20)),
             title: Text(c.name),
             subtitle: Text(c.code),
             onTap: () async {
@@ -118,8 +186,7 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  void _showThemePicker(
-      BuildContext context, WidgetRef ref, String current) {
+  void _showThemePicker(BuildContext context, String current) {
     final options = [
       ('system', 'System default'),
       ('light', 'Light'),
@@ -196,20 +263,28 @@ class SettingsPage extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 4),
       child: ListTile(
         leading: Icon(icon, color: AppColors.primary),
-        title: Text(title,
-            style: AppTextStyles.bodyLarge(
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary)),
-        subtitle: Text(subtitle,
-            style: AppTextStyles.bodySmall(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary)),
-        trailing: Icon(Icons.chevron_right,
+        title: Text(
+          title,
+          style: AppTextStyles.bodyLarge(
             color: isDark
-                ? AppColors.darkTextTertiary
-                : AppColors.lightTextTertiary),
+                ? AppColors.darkTextPrimary
+                : AppColors.lightTextPrimary,
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: AppTextStyles.bodySmall(
+            color: isDark
+                ? AppColors.darkTextSecondary
+                : AppColors.lightTextSecondary,
+          ),
+        ),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: isDark
+              ? AppColors.darkTextTertiary
+              : AppColors.lightTextTertiary,
+        ),
         onTap: onTap,
       ),
     );

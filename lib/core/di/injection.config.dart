@@ -10,9 +10,14 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:finsight/core/di/database_module.dart' as _i1059;
+import 'package:finsight/core/services/biometric_auth_service.dart' as _i237;
+import 'package:finsight/core/services/transaction_ledger_service.dart'
+    as _i465;
 import 'package:finsight/database/app_database.dart' as _i63;
 import 'package:finsight/database/daos/accounts_dao.dart' as _i431;
+import 'package:finsight/database/daos/budgets_dao.dart' as _i461;
 import 'package:finsight/database/daos/categories_dao.dart' as _i879;
+import 'package:finsight/database/daos/goals_dao.dart' as _i789;
 import 'package:finsight/database/daos/ledger_dao.dart' as _i1064;
 import 'package:finsight/database/daos/preferences_dao.dart' as _i643;
 import 'package:finsight/database/daos/tags_dao.dart' as _i138;
@@ -22,10 +27,18 @@ import 'package:finsight/features/accounts/data/repositories/account_repository_
     as _i278;
 import 'package:finsight/features/accounts/domain/repositories/i_account_repository.dart'
     as _i681;
+import 'package:finsight/features/budgets/data/repositories/budget_repository_impl.dart'
+    as _i1060;
+import 'package:finsight/features/budgets/domain/repositories/i_budget_repository.dart'
+    as _i219;
 import 'package:finsight/features/categories/data/repositories/category_repository_impl.dart'
     as _i798;
 import 'package:finsight/features/categories/domain/repositories/i_category_repository.dart'
     as _i281;
+import 'package:finsight/features/goals/data/repositories/goal_repository_impl.dart'
+    as _i737;
+import 'package:finsight/features/goals/domain/repositories/i_goal_repository.dart'
+    as _i562;
 import 'package:finsight/features/settings/data/repositories/preferences_repository_impl.dart'
     as _i708;
 import 'package:finsight/features/settings/domain/repositories/i_preferences_repository.dart'
@@ -54,6 +67,9 @@ extension GetItInjectableX on _i174.GetIt {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final databaseModule = _$DatabaseModule();
     gh.singleton<_i63.AppDatabase>(() => databaseModule.appDatabase);
+    gh.lazySingleton<_i237.BiometricAuthService>(
+      () => _i237.BiometricAuthService(),
+    );
     gh.lazySingleton<_i431.AccountsDao>(
       () => databaseModule.accountsDao(gh<_i63.AppDatabase>()),
     );
@@ -75,22 +91,23 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i643.PreferencesDao>(
       () => databaseModule.preferencesDao(gh<_i63.AppDatabase>()),
     );
+    gh.lazySingleton<_i461.BudgetsDao>(
+      () => databaseModule.budgetsDao(gh<_i63.AppDatabase>()),
+    );
+    gh.lazySingleton<_i789.GoalsDao>(
+      () => databaseModule.goalsDao(gh<_i63.AppDatabase>()),
+    );
     gh.lazySingleton<_i568.IPreferencesRepository>(
       () => _i708.PreferencesRepositoryImpl(gh<_i643.PreferencesDao>()),
+    );
+    gh.lazySingleton<_i219.IBudgetRepository>(
+      () => _i1060.BudgetRepositoryImpl(gh<_i461.BudgetsDao>()),
     );
     gh.lazySingleton<_i281.ICategoryRepository>(
       () => _i798.CategoryRepositoryImpl(gh<_i879.CategoriesDao>()),
     );
     gh.lazySingleton<_i53.ITagRepository>(
       () => _i1001.TagRepositoryImpl(gh<_i138.TagsDao>()),
-    );
-    gh.lazySingleton<_i333.ITransactionRepository>(
-      () => _i219.TransactionRepositoryImpl(
-        gh<_i63.AppDatabase>(),
-        gh<_i1034.TransactionsDao>(),
-        gh<_i1064.LedgerDao>(),
-        gh<_i431.AccountsDao>(),
-      ),
     );
     gh.lazySingleton<_i859.ITransferRepository>(
       () => _i387.TransferRepositoryImpl(
@@ -100,8 +117,31 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1064.LedgerDao>(),
       ),
     );
+    gh.lazySingleton<_i465.TransactionLedgerService>(
+      () => _i465.TransactionLedgerService(
+        gh<_i1034.TransactionsDao>(),
+        gh<_i1064.LedgerDao>(),
+        gh<_i431.AccountsDao>(),
+        gh<_i789.GoalsDao>(),
+      ),
+    );
     gh.lazySingleton<_i681.IAccountRepository>(
       () => _i278.AccountRepositoryImpl(gh<_i431.AccountsDao>()),
+    );
+    gh.lazySingleton<_i562.IGoalRepository>(
+      () => _i737.GoalRepositoryImpl(
+        gh<_i63.AppDatabase>(),
+        gh<_i789.GoalsDao>(),
+        gh<_i1034.TransactionsDao>(),
+        gh<_i465.TransactionLedgerService>(),
+      ),
+    );
+    gh.lazySingleton<_i333.ITransactionRepository>(
+      () => _i219.TransactionRepositoryImpl(
+        gh<_i63.AppDatabase>(),
+        gh<_i1034.TransactionsDao>(),
+        gh<_i465.TransactionLedgerService>(),
+      ),
     );
     return this;
   }

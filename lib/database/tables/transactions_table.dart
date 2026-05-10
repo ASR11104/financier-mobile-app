@@ -40,6 +40,9 @@ class Transactions extends Table {
   /// Investment vehicle type (only for investment transactions).
   TextColumn get investmentType => text().nullable()();
 
+  /// Links this transaction to a savings goal (set for goal contributions).
+  TextColumn get goalId => text().nullable()();
+
   /// Timestamp when the transaction was created.
   DateTimeColumn get createdAt =>
       dateTime().withDefault(currentDateAndTime)();

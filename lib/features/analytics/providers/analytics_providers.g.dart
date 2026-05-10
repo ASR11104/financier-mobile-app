@@ -23,7 +23,7 @@ final monthlyTotalsProvider = AutoDisposeProvider<List<MonthlyTotal>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef MonthlyTotalsRef = AutoDisposeProviderRef<List<MonthlyTotal>>;
-String _$categorySpendingHash() => r'fdd8c569f018f84eb879d0b41c1974d4aa3746b5';
+String _$categorySpendingHash() => r'59ee2c8372d5f9b5ddccc8b39b44fb6a12eb4d08';
 
 /// See also [categorySpending].
 @ProviderFor(categorySpending)

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/dashboard/presentation/pages/dashboard_page.dart';
-import '../../features/transactions/presentation/pages/transactions_page.dart';
-import '../../features/accounts/presentation/pages/accounts_page.dart';
 import '../../features/analytics/presentation/pages/analytics_page.dart';
-import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/accounts/presentation/pages/accounts_page.dart';
+import '../../features/dashboard/presentation/pages/dashboard_page.dart';
+import '../../features/goals/presentation/pages/goal_detail_page.dart';
 import '../../features/settings/presentation/pages/category_management_page.dart';
+import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/settings/presentation/pages/tag_management_page.dart';
+import '../../features/transactions/presentation/pages/transactions_page.dart';
 
 /// Navigation shell key for preserving tab state.
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -58,6 +59,15 @@ final GoRouter appRouter = GoRouter(
               path: '/analytics',
               name: 'analytics',
               builder: (context, state) => const AnalyticsPage(),
+              routes: [
+                GoRoute(
+                  path: 'goals/:id',
+                  name: 'goal_detail',
+                  builder: (context, state) => GoalDetailPage(
+                    goalId: state.pathParameters['id']!,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

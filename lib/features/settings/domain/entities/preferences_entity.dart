@@ -8,5 +8,6 @@ class PreferencesEntity with _$PreferencesEntity {
     required String currencyCode,
     required String currencySymbol,
     @Default('system') String themeMode,
+    @Default(false) bool isLockEnabled,
   }) = _PreferencesEntity;
 }

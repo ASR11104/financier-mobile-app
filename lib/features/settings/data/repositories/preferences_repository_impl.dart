@@ -18,6 +18,7 @@ class PreferencesRepositoryImpl implements IPreferencesRepository {
         currencyCode: row.currencyCode,
         currencySymbol: row.currencySymbol,
         themeMode: row.themeMode,
+        isLockEnabled: row.isLockEnabled == 1,
       );
     });
   }
@@ -30,5 +31,10 @@ class PreferencesRepositoryImpl implements IPreferencesRepository {
   @override
   Future<void> updateThemeMode(String mode) {
     return _dao.updateThemeMode(mode);
+  }
+
+  @override
+  Future<void> setAppLock(bool enabled) {
+    return _dao.updateAppLock(enabled);
   }
 }

@@ -25,3 +25,9 @@ ThemeMode themeMode(Ref ref) {
     _ => ThemeMode.system,
   };
 }
+
+/// Whether the app is currently showing the lock screen.
+///
+/// Set to true on launch (if lock is enabled) and when the app is backgrounded.
+/// Set to false by [AppLockScreen] after successful authentication.
+final appLockedProvider = StateProvider<bool>((ref) => false);

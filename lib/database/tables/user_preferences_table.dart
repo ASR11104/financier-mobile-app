@@ -30,6 +30,10 @@ class UserPreferences extends Table {
   DateTimeColumn get updatedAt =>
       dateTime().withDefault(currentDateAndTime)();
 
+  /// Whether the app should require biometric/device auth on launch/resume.
+  IntColumn get isLockEnabled =>
+      integer().withDefault(const Constant(0))();
+
   @override
   Set<Column> get primaryKey => {id};
 }

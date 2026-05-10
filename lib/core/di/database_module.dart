@@ -2,7 +2,9 @@ import 'package:injectable/injectable.dart';
 
 import '../../database/app_database.dart';
 import '../../database/daos/accounts_dao.dart';
+import '../../database/daos/budgets_dao.dart';
 import '../../database/daos/categories_dao.dart';
+import '../../database/daos/goals_dao.dart';
 import '../../database/daos/ledger_dao.dart';
 import '../../database/daos/preferences_dao.dart';
 import '../../database/daos/tags_dao.dart';
@@ -34,4 +36,10 @@ abstract class DatabaseModule {
 
   @lazySingleton
   PreferencesDao preferencesDao(AppDatabase db) => db.preferencesDao;
+
+  @lazySingleton
+  BudgetsDao budgetsDao(AppDatabase db) => db.budgetsDao;
+
+  @lazySingleton
+  GoalsDao goalsDao(AppDatabase db) => db.goalsDao;
 }

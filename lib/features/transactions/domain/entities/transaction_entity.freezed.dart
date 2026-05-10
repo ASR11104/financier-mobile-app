@@ -26,6 +26,7 @@ mixin _$TransactionEntity {
   String get description => throw _privateConstructorUsedError;
   InvestmentType? get investmentType => throw _privateConstructorUsedError;
   List<String> get tagIds => throw _privateConstructorUsedError;
+  String? get goalId => throw _privateConstructorUsedError;
 
   /// Create a copy of TransactionEntity
   /// with the given fields replaced by the non-null parameter values.
@@ -51,6 +52,7 @@ abstract class $TransactionEntityCopyWith<$Res> {
     String description,
     InvestmentType? investmentType,
     List<String> tagIds,
+    String? goalId,
   });
 }
 
@@ -78,6 +80,7 @@ class _$TransactionEntityCopyWithImpl<$Res, $Val extends TransactionEntity>
     Object? description = null,
     Object? investmentType = freezed,
     Object? tagIds = null,
+    Object? goalId = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -117,6 +120,10 @@ class _$TransactionEntityCopyWithImpl<$Res, $Val extends TransactionEntity>
                 ? _value.tagIds
                 : tagIds // ignore: cast_nullable_to_non_nullable
                       as List<String>,
+            goalId: freezed == goalId
+                ? _value.goalId
+                : goalId // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -142,6 +149,7 @@ abstract class _$$TransactionEntityImplCopyWith<$Res>
     String description,
     InvestmentType? investmentType,
     List<String> tagIds,
+    String? goalId,
   });
 }
 
@@ -168,6 +176,7 @@ class __$$TransactionEntityImplCopyWithImpl<$Res>
     Object? description = null,
     Object? investmentType = freezed,
     Object? tagIds = null,
+    Object? goalId = freezed,
   }) {
     return _then(
       _$TransactionEntityImpl(
@@ -207,6 +216,10 @@ class __$$TransactionEntityImplCopyWithImpl<$Res>
             ? _value._tagIds
             : tagIds // ignore: cast_nullable_to_non_nullable
                   as List<String>,
+        goalId: freezed == goalId
+            ? _value.goalId
+            : goalId // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -225,6 +238,7 @@ class _$TransactionEntityImpl implements _TransactionEntity {
     this.description = '',
     this.investmentType,
     final List<String> tagIds = const [],
+    this.goalId,
   }) : _tagIds = tagIds;
 
   @override
@@ -254,8 +268,11 @@ class _$TransactionEntityImpl implements _TransactionEntity {
   }
 
   @override
+  final String? goalId;
+
+  @override
   String toString() {
-    return 'TransactionEntity(id: $id, type: $type, amount: $amount, accountId: $accountId, categoryId: $categoryId, date: $date, description: $description, investmentType: $investmentType, tagIds: $tagIds)';
+    return 'TransactionEntity(id: $id, type: $type, amount: $amount, accountId: $accountId, categoryId: $categoryId, date: $date, description: $description, investmentType: $investmentType, tagIds: $tagIds, goalId: $goalId)';
   }
 
   @override
@@ -275,7 +292,8 @@ class _$TransactionEntityImpl implements _TransactionEntity {
                 other.description == description) &&
             (identical(other.investmentType, investmentType) ||
                 other.investmentType == investmentType) &&
-            const DeepCollectionEquality().equals(other._tagIds, _tagIds));
+            const DeepCollectionEquality().equals(other._tagIds, _tagIds) &&
+            (identical(other.goalId, goalId) || other.goalId == goalId));
   }
 
   @override
@@ -290,6 +308,7 @@ class _$TransactionEntityImpl implements _TransactionEntity {
     description,
     investmentType,
     const DeepCollectionEquality().hash(_tagIds),
+    goalId,
   );
 
   /// Create a copy of TransactionEntity
@@ -315,6 +334,7 @@ abstract class _TransactionEntity implements TransactionEntity {
     final String description,
     final InvestmentType? investmentType,
     final List<String> tagIds,
+    final String? goalId,
   }) = _$TransactionEntityImpl;
 
   @override
@@ -335,6 +355,8 @@ abstract class _TransactionEntity implements TransactionEntity {
   InvestmentType? get investmentType;
   @override
   List<String> get tagIds;
+  @override
+  String? get goalId;
 
   /// Create a copy of TransactionEntity
   /// with the given fields replaced by the non-null parameter values.

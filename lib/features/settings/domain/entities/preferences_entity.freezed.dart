@@ -20,6 +20,7 @@ mixin _$PreferencesEntity {
   String get currencyCode => throw _privateConstructorUsedError;
   String get currencySymbol => throw _privateConstructorUsedError;
   String get themeMode => throw _privateConstructorUsedError;
+  bool get isLockEnabled => throw _privateConstructorUsedError;
 
   /// Create a copy of PreferencesEntity
   /// with the given fields replaced by the non-null parameter values.
@@ -35,7 +36,12 @@ abstract class $PreferencesEntityCopyWith<$Res> {
     $Res Function(PreferencesEntity) then,
   ) = _$PreferencesEntityCopyWithImpl<$Res, PreferencesEntity>;
   @useResult
-  $Res call({String currencyCode, String currencySymbol, String themeMode});
+  $Res call({
+    String currencyCode,
+    String currencySymbol,
+    String themeMode,
+    bool isLockEnabled,
+  });
 }
 
 /// @nodoc
@@ -56,6 +62,7 @@ class _$PreferencesEntityCopyWithImpl<$Res, $Val extends PreferencesEntity>
     Object? currencyCode = null,
     Object? currencySymbol = null,
     Object? themeMode = null,
+    Object? isLockEnabled = null,
   }) {
     return _then(
       _value.copyWith(
@@ -71,6 +78,10 @@ class _$PreferencesEntityCopyWithImpl<$Res, $Val extends PreferencesEntity>
                 ? _value.themeMode
                 : themeMode // ignore: cast_nullable_to_non_nullable
                       as String,
+            isLockEnabled: null == isLockEnabled
+                ? _value.isLockEnabled
+                : isLockEnabled // ignore: cast_nullable_to_non_nullable
+                      as bool,
           )
           as $Val,
     );
@@ -86,7 +97,12 @@ abstract class _$$PreferencesEntityImplCopyWith<$Res>
   ) = __$$PreferencesEntityImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String currencyCode, String currencySymbol, String themeMode});
+  $Res call({
+    String currencyCode,
+    String currencySymbol,
+    String themeMode,
+    bool isLockEnabled,
+  });
 }
 
 /// @nodoc
@@ -106,6 +122,7 @@ class __$$PreferencesEntityImplCopyWithImpl<$Res>
     Object? currencyCode = null,
     Object? currencySymbol = null,
     Object? themeMode = null,
+    Object? isLockEnabled = null,
   }) {
     return _then(
       _$PreferencesEntityImpl(
@@ -121,6 +138,10 @@ class __$$PreferencesEntityImplCopyWithImpl<$Res>
             ? _value.themeMode
             : themeMode // ignore: cast_nullable_to_non_nullable
                   as String,
+        isLockEnabled: null == isLockEnabled
+            ? _value.isLockEnabled
+            : isLockEnabled // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -133,6 +154,7 @@ class _$PreferencesEntityImpl implements _PreferencesEntity {
     required this.currencyCode,
     required this.currencySymbol,
     this.themeMode = 'system',
+    this.isLockEnabled = false,
   });
 
   @override
@@ -142,10 +164,13 @@ class _$PreferencesEntityImpl implements _PreferencesEntity {
   @override
   @JsonKey()
   final String themeMode;
+  @override
+  @JsonKey()
+  final bool isLockEnabled;
 
   @override
   String toString() {
-    return 'PreferencesEntity(currencyCode: $currencyCode, currencySymbol: $currencySymbol, themeMode: $themeMode)';
+    return 'PreferencesEntity(currencyCode: $currencyCode, currencySymbol: $currencySymbol, themeMode: $themeMode, isLockEnabled: $isLockEnabled)';
   }
 
   @override
@@ -158,12 +183,19 @@ class _$PreferencesEntityImpl implements _PreferencesEntity {
             (identical(other.currencySymbol, currencySymbol) ||
                 other.currencySymbol == currencySymbol) &&
             (identical(other.themeMode, themeMode) ||
-                other.themeMode == themeMode));
+                other.themeMode == themeMode) &&
+            (identical(other.isLockEnabled, isLockEnabled) ||
+                other.isLockEnabled == isLockEnabled));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, currencyCode, currencySymbol, themeMode);
+  int get hashCode => Object.hash(
+    runtimeType,
+    currencyCode,
+    currencySymbol,
+    themeMode,
+    isLockEnabled,
+  );
 
   /// Create a copy of PreferencesEntity
   /// with the given fields replaced by the non-null parameter values.
@@ -182,6 +214,7 @@ abstract class _PreferencesEntity implements PreferencesEntity {
     required final String currencyCode,
     required final String currencySymbol,
     final String themeMode,
+    final bool isLockEnabled,
   }) = _$PreferencesEntityImpl;
 
   @override
@@ -190,6 +223,8 @@ abstract class _PreferencesEntity implements PreferencesEntity {
   String get currencySymbol;
   @override
   String get themeMode;
+  @override
+  bool get isLockEnabled;
 
   /// Create a copy of PreferencesEntity
   /// with the given fields replaced by the non-null parameter values.

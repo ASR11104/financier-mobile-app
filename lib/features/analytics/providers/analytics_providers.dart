@@ -71,17 +71,17 @@ List<CategorySpend> categorySpending(Ref ref) {
     totals[t.categoryId] = (totals[t.categoryId] ?? 0) + t.amount;
   }
 
-  return totals.entries.map((e) {
-    final cat = cats.firstWhere(
-      (c) => c.id == e.key,
-      orElse: () => cats.isNotEmpty ? cats.first : throw StateError(''),
-    );
-    return CategorySpend(
-      categoryId: e.key,
-      name: cat.name,
-      color: cat.color,
-      total: e.value,
-    );
+  return totals.entries.expand((e) {
+    final cat = cats.where((c) => c.id == e.key).firstOrNull;
+    if (cat == null) return const <CategorySpend>[];
+    return [
+      CategorySpend(
+        categoryId: e.key,
+        name: cat.name,
+        color: cat.color,
+        total: e.value,
+      ),
+    ];
   }).toList()
     ..sort((a, b) => b.total.compareTo(a.total));
 }
