@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/di/injection.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../features/transactions/domain/entities/transaction_entity.dart';
 import '../domain/entities/goal_entity.dart';
 import '../domain/repositories/i_goal_repository.dart';
@@ -79,10 +80,8 @@ GoalProgress goalProgress(Ref ref, String goalId) {
   // Check if there's a contribution this month
   final contribAsync = ref.watch(goalContributionsProvider(goalId));
   final contribs = contribAsync.valueOrNull ?? [];
-  final now = DateTime.now();
-  final prefix = '${now.year}-${now.month.toString().padLeft(2, '0')}';
   final contributedThisMonth =
-      contribs.any((t) => t.date.startsWith(prefix));
+      contribs.any((t) => t.date.startsWith(Formatters.currentMonthPrefix()));
 
   return GoalProgress(
     goal: goal,

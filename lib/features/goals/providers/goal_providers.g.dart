@@ -203,7 +203,7 @@ class _GoalContributionsProviderElement
   String get goalId => (origin as GoalContributionsProvider).goalId;
 }
 
-String _$goalProgressHash() => r'ad83d8342bfba19264c869ae6a66c5c0fa11f557';
+String _$goalProgressHash() => r'adc1d769bdc39fe7d8686beeb7ea4af1ed229ec2';
 
 /// See also [goalProgress].
 @ProviderFor(goalProgress)

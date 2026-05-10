@@ -55,6 +55,12 @@ class Formatters {
     return DateTime.parse(dateStr);
   }
 
+  /// Returns the current month as a `yyyy-MM` prefix for date filtering.
+  static String currentMonthPrefix() {
+    final now = DateTime.now();
+    return '${now.year}-${now.month.toString().padLeft(2, '0')}';
+  }
+
   /// Formats a large number in compact form.
   ///
   /// Example: formatCompact(150000) → "1.5L" (for INR) or "150K"

@@ -50,7 +50,7 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart> {
                 final isTouched = i == _touchedIndex;
                 final pct = total > 0 ? (c.total / total * 100) : 0;
                 return PieChartSectionData(
-                  color: _parseColor(c.color),
+                  color: AppColors.fromHex(c.color),
                   value: c.total,
                   title: '${pct.toStringAsFixed(0)}%',
                   radius: isTouched ? 70 : 56,
@@ -80,7 +80,7 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart> {
                         width: 10,
                         height: 10,
                         decoration: BoxDecoration(
-                          color: _parseColor(c.color),
+                          color: AppColors.fromHex(c.color),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -105,12 +105,4 @@ class _CategoryPieChartState extends ConsumerState<CategoryPieChart> {
     );
   }
 
-  static Color _parseColor(String hex) {
-    try {
-      final h = hex.replaceAll('#', '');
-      return Color(int.parse('FF$h', radix: 16));
-    } catch (_) {
-      return AppColors.primary;
-    }
-  }
 }

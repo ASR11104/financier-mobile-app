@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/di/injection.dart';
 import '../../../core/enums/transaction_type.dart';
+import '../../../core/utils/formatters.dart';
 import '../domain/entities/budget_entity.dart';
 import '../domain/repositories/i_budget_repository.dart';
 import '../../transactions/providers/transactions_providers.dart';
@@ -18,31 +19,46 @@ Stream<List<BudgetEntity>> budgets(Ref ref) =>
 
 /// Computes the date prefix for filtering transactions in the current period.
 String budgetDatePrefix(BudgetPeriod period) {
-  final now = DateTime.now();
-  if (period == BudgetPeriod.monthly) {
-    final month = now.month.toString().padLeft(2, '0');
-    return '${now.year}-$month';
-  }
-  return '${now.year}';
+  return period == BudgetPeriod.monthly
+      ? Formatters.currentMonthPrefix()
+      : DateTime.now().year.toString();
 }
 
-/// All active budgets with their current-period spending, computed in-memory
-/// from the live transactions stream. Reacts to both budget and transaction
-/// changes without any async complexity.
+/// All active budgets with their current-period spending.
+///
+/// Groups expense transactions into a map once (O(M)) then looks up each
+/// budget by category in O(1), giving O(M+N) total instead of O(M×N).
 @riverpod
 List<BudgetWithSpending> budgetsWithSpending(Ref ref) {
   final budgetList = ref.watch(budgetsProvider).valueOrNull ?? [];
   final txns = ref.watch(transactionsProvider).valueOrNull ?? [];
 
+  // Build category → spent map for each period once.
+  final monthlySpend = <String, double>{};
+  final yearlySpend = <String, double>{};
+  final monthPrefix = Formatters.currentMonthPrefix();
+  final yearPrefix = DateTime.now().year.toString();
+
+  for (final t in txns) {
+    if (t.type != TransactionType.expense) continue;
+    if (t.date.startsWith(monthPrefix)) {
+      monthlySpend[t.categoryId] =
+          (monthlySpend[t.categoryId] ?? 0) + t.amount;
+    }
+    if (t.date.startsWith(yearPrefix)) {
+      yearlySpend[t.categoryId] =
+          (yearlySpend[t.categoryId] ?? 0) + t.amount;
+    }
+  }
+
   return budgetList.map((budget) {
-    final prefix = budgetDatePrefix(budget.period);
-    final spent = txns
-        .where((t) =>
-            t.type == TransactionType.expense &&
-            t.categoryId == budget.categoryId &&
-            t.date.startsWith(prefix))
-        .fold(0.0, (sum, t) => sum + t.amount);
-    return BudgetWithSpending(budget: budget, spent: spent);
+    final spendMap = budget.period == BudgetPeriod.monthly
+        ? monthlySpend
+        : yearlySpend;
+    return BudgetWithSpending(
+      budget: budget,
+      spent: spendMap[budget.categoryId] ?? 0,
+    );
   }).toList();
 }
 

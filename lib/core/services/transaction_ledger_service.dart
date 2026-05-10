@@ -8,6 +8,7 @@ import '../../database/daos/goals_dao.dart';
 import '../../database/daos/ledger_dao.dart';
 import '../../database/daos/transactions_dao.dart';
 import '../../features/transactions/domain/entities/transaction_entity.dart';
+import '../enums/account_type.dart';
 import '../enums/transaction_type.dart';
 
 /// Shared service that applies and reverses financial transactions.
@@ -71,6 +72,11 @@ class TransactionLedgerService {
 
     await _accountsDao.updateBalance(txn.accountId, newBalance);
 
+    if (account.type == AccountType.creditCard.value && isDebit) {
+      final newAmountUsed = (account.amountUsed ?? 0) + txn.amount;
+      await _accountsDao.updateAmountUsed(txn.accountId, newAmountUsed);
+    }
+
     if (txn.goalId != null) {
       await _updateGoalAmount(txn.goalId!, txn.amount);
     }
@@ -82,8 +88,9 @@ class TransactionLedgerService {
     final account = await _accountsDao.getById(row.accountId);
     if (account == null) return;
 
-    final wasDebit = row.type == TransactionType.expense.value ||
-        row.type == TransactionType.investment.value;
+    final txnType = TransactionType.fromValue(row.type);
+    final wasDebit = txnType == TransactionType.expense ||
+        txnType == TransactionType.investment;
     final restoredBalance = wasDebit
         ? account.balance + row.amount
         : account.balance - row.amount;
@@ -96,6 +103,12 @@ class TransactionLedgerService {
     await _transactionsDao.removeAllTagsForTransaction(row.id);
     await _transactionsDao.deleteTransaction(row.id);
     await _accountsDao.updateBalance(row.accountId, restoredBalance);
+
+    if (account.type == AccountType.creditCard.value && wasDebit) {
+      final newAmountUsed =
+          ((account.amountUsed ?? 0) - row.amount).clamp(0.0, double.infinity);
+      await _accountsDao.updateAmountUsed(row.accountId, newAmountUsed);
+    }
   }
 
   Future<void> _updateGoalAmount(String goalId, double delta) async {

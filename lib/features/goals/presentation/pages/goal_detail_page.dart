@@ -30,7 +30,7 @@ class GoalDetailPage extends ConsumerWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final goalColor = _parseColor(goal.color);
+    final goalColor = AppColors.fromHex(goal.color);
 
     return Scaffold(
       appBar: AppBar(
@@ -286,12 +286,4 @@ class GoalDetailPage extends ConsumerWidget {
     }
   }
 
-  static Color _parseColor(String hex) {
-    try {
-      final sanitized = hex.replaceAll('#', '');
-      return Color(int.parse('FF$sanitized', radix: 16));
-    } catch (_) {
-      return AppColors.primary;
-    }
-  }
 }

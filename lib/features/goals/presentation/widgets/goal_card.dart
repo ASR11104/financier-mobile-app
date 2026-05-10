@@ -46,7 +46,7 @@ class GoalCard extends ConsumerWidget {
 
     final percent =
         goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount).clamp(0.0, 1.0) : 0.0;
-    final goalColor = _parseColor(goal.color);
+    final goalColor = AppColors.fromHex(goal.color);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -138,12 +138,4 @@ class GoalCard extends ConsumerWidget {
     );
   }
 
-  static Color _parseColor(String hex) {
-    try {
-      final sanitized = hex.replaceAll('#', '');
-      return Color(int.parse('FF$sanitized', radix: 16));
-    } catch (_) {
-      return AppColors.primary;
-    }
-  }
 }

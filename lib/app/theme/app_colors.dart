@@ -46,4 +46,14 @@ class AppColors {
   static const creditCard = Color(0xFFE91E63);
   static const cash = Color(0xFF4CAF50);
   static const wallet = Color(0xFFFF9800);
+
+  /// Parses a `#RRGGBB` hex string into a [Color], falling back to [primary].
+  static Color fromHex(String hex) {
+    try {
+      final sanitized = hex.replaceAll('#', '');
+      return Color(int.parse('FF$sanitized', radix: 16));
+    } catch (_) {
+      return primary;
+    }
+  }
 }

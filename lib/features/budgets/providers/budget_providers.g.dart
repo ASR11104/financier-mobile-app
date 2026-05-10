@@ -42,11 +42,12 @@ final budgetsProvider = AutoDisposeStreamProvider<List<BudgetEntity>>.internal(
 // ignore: unused_element
 typedef BudgetsRef = AutoDisposeStreamProviderRef<List<BudgetEntity>>;
 String _$budgetsWithSpendingHash() =>
-    r'3c45993d7172f2642cec1eb70d5805e99b644e47';
+    r'669ffa532b58fb94681457ffaac6b23361718a08';
 
-/// All active budgets with their current-period spending, computed in-memory
-/// from the live transactions stream. Reacts to both budget and transaction
-/// changes without any async complexity.
+/// All active budgets with their current-period spending.
+///
+/// Groups expense transactions into a map once (O(M)) then looks up each
+/// budget by category in O(1), giving O(M+N) total instead of O(M×N).
 ///
 /// Copied from [budgetsWithSpending].
 @ProviderFor(budgetsWithSpending)

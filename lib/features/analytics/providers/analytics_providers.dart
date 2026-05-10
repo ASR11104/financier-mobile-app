@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/enums/transaction_type.dart';
+import '../../../core/utils/formatters.dart';
 import '../../categories/providers/categories_providers.dart';
 import '../../transactions/providers/transactions_providers.dart';
 
@@ -61,7 +62,7 @@ List<MonthlyTotal> monthlyTotals(Ref ref) {
 List<CategorySpend> categorySpending(Ref ref) {
   final txns = ref.watch(transactionsProvider).valueOrNull ?? [];
   final cats = ref.watch(categoriesProvider).valueOrNull ?? [];
-  final prefix = _currentMonthPrefix();
+  final prefix = Formatters.currentMonthPrefix();
 
   final expenseTxns = txns.where(
       (t) => t.type == TransactionType.expense && t.date.startsWith(prefix));
@@ -103,7 +104,3 @@ String _monthLabel(String yearMonth) {
   return months[int.parse(parts[1])];
 }
 
-String _currentMonthPrefix() {
-  final now = DateTime.now();
-  return '${now.year}-${now.month.toString().padLeft(2, '0')}';
-}
