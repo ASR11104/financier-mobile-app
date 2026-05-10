@@ -8,11 +8,11 @@ A local-first personal finance app for Android built with Flutter. Track expense
 
 | Tab | Description |
 |---|---|
-| **Dashboard** | Total balance, monthly income vs expense summary, recent transactions |
+| **Dashboard** | Net Worth, Cash & Bank, Credit Dues, monthly income/expense summary, recent transactions |
 | **Transactions** | Full ledger with All / Expense / Income / Investment / Transfers tabs |
 | **Accounts** | Bank accounts, cash wallets, credit cards; transfers via FAB |
-| **Analytics** | Monthly income/expense bar chart; spending-by-category pie chart |
-| **Settings** | Currency, theme (light/dark/system), category and tag management |
+| **Analytics** | Monthly income/expense bar chart; spending-by-category pie chart; Budgets; Goals |
+| **Settings** | Currency, theme (light/dark/system), category and tag management, App Lock |
 
 ---
 
@@ -57,18 +57,21 @@ lib/
 ├── core/
 │   ├── di/                   # get_it + injectable wiring
 │   ├── enums/                # AccountType, TransactionType, InvestmentType, …
-│   ├── utils/                # Formatters
-│   └── widgets/              # Shared UI: EmptyState, IconPicker, ColorPicker
+│   ├── services/             # TransactionLedgerService (shared atomic write logic)
+│   ├── utils/                # Formatters (amounts, dates, month prefix)
+│   └── widgets/              # Shared UI: EmptyState, IconPicker, ColorPicker, AppLockScreen
 ├── database/
-│   ├── tables/               # 8 Drift table definitions
-│   ├── daos/                 # 7 Data Access Objects
+│   ├── tables/               # 10 Drift table definitions
+│   ├── daos/                 # 9 Data Access Objects
 │   ├── app_database.dart     # AppDatabase (entry point for Drift)
 │   └── seed_data.dart        # Default categories seeded on first launch
 └── features/
     ├── accounts/
     ├── analytics/
+    ├── budgets/
     ├── categories/
     ├── dashboard/
+    ├── goals/
     ├── settings/
     ├── tags/
     ├── transactions/
@@ -112,7 +115,7 @@ See [`.github/workflows/flutter.yml`](.github/workflows/flutter.yml).
 
 ## Status
 
-Phases 0–11 complete: full CRUD, edit flows, empty states, error handling, transfers visibility, icon/color pickers, 21 tests, CI green.
+Phases 0–12 complete (Phase 2 done): full CRUD, edit flows, budgets & goals tracking, credit card liability accounting, Net Worth dashboard, App Lock (biometric/PIN), icon/color pickers, 21 tests, CI green.
 
 For architecture details see [`ARCHITECTURE.md`](ARCHITECTURE.md).  
 For agent/contributor conventions see [`CLAUDE.md`](CLAUDE.md).

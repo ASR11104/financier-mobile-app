@@ -79,13 +79,25 @@ Never manually edit files ending in:
 
 Regenerate with: `dart run build_runner build --delete-conflicting-outputs`
 
-## Current Development State (as of 2026-05-09)
+## Current Development State (as of 2026-05-10)
 
-**Done**: Full Drift schema (8 tables, 7 DAOs), GoRouter (5 tabs), Material 3 theme, seed data, all enums, formatters.
+**Done** (Phases 0–12 / Phase 2 complete):
+- Full Drift schema: 10 tables, 9 DAOs (added `budgets`, `goals`)
+- All 5 feature tabs fully implemented with CRUD, edit flows, empty states, error handling
+- Dashboard: Net Worth, Cash & Bank, Credit Dues, monthly income/expense summary, recent transactions
+- Transactions: full ledger with type tabs, add/edit/delete, tag support
+- Accounts: bank accounts, cash wallets, credit cards; transfers via FAB
+- Analytics: monthly bar chart, category pie chart, Budgets tab, Goals tab with detail page
+- Settings: currency, theme (light/dark/system), categories, tags, App Lock (biometric/PIN)
+- Credit card accounting: `amountUsed` tracks liability; `netWorthProvider = totalBalance − creditCardLiability`
+- Budgets: per-category limits (monthly/yearly), spending progress via O(M+N) provider
+- Goals: savings goals with contribution tracking, progress ring, monthly suggestion, auto-complete
+- `TransactionLedgerService`: shared atomic write service used by both transaction and goal repos
+- `AppColors.fromHex()`, `Formatters.currentMonthPrefix()`: shared utilities replacing per-file helpers
+- App Lock: `local_auth` biometric/PIN; `kDebugMode` bypass for emulator testing
+- 21 tests, CI green (GitHub Actions)
 
-**Stubs only**: All 5 feature pages (Dashboard, Transactions, Accounts, Analytics, Settings) are empty placeholder UIs.
-
-**Not yet implemented**: Riverpod providers, domain entities, repository interfaces/impls, DI injectable wiring, tests, CI.
+**Nothing is a stub.** All feature pages are fully functional.
 
 **Implementation order for each feature**: Domain entity (freezed) → Repository interface → Repository impl (uses DAO) → Riverpod providers → Presentation widgets/pages.
 

@@ -32,7 +32,7 @@ Allowed import graph:
 
 ## Database & ledger integrity
 
-### Tables (8)
+### Tables (10)
 
 | Table | Purpose |
 |---|---|
@@ -43,16 +43,26 @@ Allowed import graph:
 | `categories` | Transaction categories (seeded defaults + user-created) |
 | `tags` | Free-form labels for transactions |
 | `transaction_tags` | Many-to-many join: transaction ↔ tag |
-| `user_preferences` | Currency code/symbol, theme mode |
+| `user_preferences` | Currency code/symbol, theme mode, app lock flag |
+| `budgets` | Per-category spending limits (monthly or yearly period) |
+| `goals` | Savings goals with target amount, deadline, and cached progress |
 
 ### Ledger rule
 
 `accounts.balance` is a **cache**. The canonical balance is `SUM(ledger_entries)` filtered by account. Every write that touches a balance must:
 
 1. Insert a `LedgerEntry` (debit or credit) in the same `db.transaction()`.
-2. Update `accounts.balance` (or `accounts.amount_used` for credit cards).
+2. Update `accounts.balance`. For credit card debit transactions, also update `accounts.amount_used`.
 
 Violating this produces an inconsistent balance that cannot be recovered without a full ledger replay.
+
+### Credit card accounting
+
+- `accounts.balance` goes negative as expenses are charged (mirrors real credit card debt).
+- `accounts.amount_used` tracks outstanding credit — incremented on debit, decremented on reversal, clamped to ≥ 0.
+- `totalBalanceProvider` excludes credit card accounts.
+- `creditCardLiabilityProvider` sums `amount_used` across all credit card accounts.
+- `netWorthProvider = totalBalance − creditCardLiability`.
 
 ### Example — expense transaction insert
 
@@ -87,7 +97,9 @@ runApp(ProviderScope(child: FinsightApp()));
 
 `lib/core/di/database_module.dart` — `@module abstract class DatabaseModule`:
 - `@singleton AppDatabase get appDatabase` — the single SQLite connection.
-- Seven `@lazySingleton` DAO accessors (e.g. `AccountsDao accountsDao(AppDatabase db) => db.accountsDao`).
+- Nine `@lazySingleton` DAO accessors (e.g. `AccountsDao accountsDao(AppDatabase db) => db.accountsDao`).
+
+`TransactionLedgerService` (`@lazySingleton`) — shared service injected into both `TransactionRepositoryImpl` and `GoalRepositoryImpl`. Encapsulates all atomic write logic: insert transaction + ledger entry + update `balance` + update `amount_used` (credit cards) + update goal cache. Both repositories call `applyTransaction` / `reverseTransaction` inside `db.transaction()`.
 
 Each repository impl is annotated `@LazySingleton(as: I*Repository)` so get_it resolves
 the abstract type everywhere.
@@ -118,12 +130,20 @@ Family providers are called as `accountByIdProvider('acc-1')` in widgets.
 ### Provider composition
 
 ```
-accountsProvider           ─┐
-                             ├─► totalBalanceProvider (sum)
-transactionsProvider       ─┤
-                             ├─► monthlyIncomeProvider / monthlyExpenseProvider
-                             └─► recentTransactionsProvider
+accountsProvider           ─┬─► totalBalanceProvider (non-credit sum)
+                             ├─► creditCardLiabilityProvider (sum of amount_used)
+                             └─► netWorthProvider (totalBalance − liability)
+
+transactionsProvider       ─┬─► monthlyIncomeProvider / monthlyExpenseProvider
+                             ├─► recentTransactionsProvider
+                             └─► budgetsWithSpendingProvider (O(M+N) spend map)
+
+budgetsProvider            ─┘
+
+goalsProvider              ─► goal cards + goal detail page
 ```
+
+`budgetsWithSpendingProvider` is a **sync** provider that watches both `budgetsProvider` and `transactionsProvider`. It builds a `categoryId → spent` map once per period (O(M)) then looks up each budget in O(1), giving O(M+N) total instead of O(M×N).
 
 Riverpod caches and invalidates reactively — no manual `setState` or `notifyListeners`.
 
@@ -139,6 +159,7 @@ tabs, so each tab preserves its scroll position independently.
 /transactions
 /accounts
 /analytics
+  /analytics/goals/:id       # GoalDetailPage — contribution history + progress
 /settings
   /settings/categories
   /settings/tags
@@ -159,6 +180,8 @@ Material 3 throughout. `lib/app/theme/app_colors.dart` defines semantic colors:
 | `AppColors.expense` | Red — debit transactions |
 | `AppColors.investment` | Orange — investment transactions |
 | `AppColors.transfer` | Blue-grey — neutral transfers |
+
+`AppColors.fromHex(String hex)` — parses a `#RRGGBB` string to a `Color`. Used everywhere a user-chosen category/goal color is displayed; consolidated from per-file `_parseColor` helpers.
 
 `lib/app/app.dart` watches `themeModeProvider` so the theme switches live without a
 restart. `PreferencesEntity.themeMode` is stored as a plain string (`'light'`,
